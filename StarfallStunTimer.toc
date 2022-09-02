@@ -1,0 +1,7 @@
+## Interface: 11200
+## Title: Starfall Stun Timer
+## Notes: Cooldown timer for Vanilla+'s Starfall Stun
+## Author: Hawaiisa
+## Version: 1.0
+## SavedVariables: SFST_DB
+StarfallStunTimer.lua

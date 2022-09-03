@@ -30,9 +30,6 @@ end)
 
 SFST:SetScript("OnDragStop", function()
     this:StopMovingOrSizing()
-    local x, y = this:GetCenter()
-    local ux, uy = UIParent:GetCenter()
-    SFST_DB.x, SFST_DB.y = floor(x - ux + 0.5), floor(y - uy + 0.5)
 end)
 
 StarfallHit = "Your (.*) hits (.*) for (%d+) Arcane damage."

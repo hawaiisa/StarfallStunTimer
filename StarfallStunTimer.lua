@@ -1,38 +1,44 @@
-local SFST = CreateFrame("Frame","StarfallStun")
-SFST:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
-SFST:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE")
-SFST:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE")
+local SFST = CreateFrame("Frame","SFSTunTimerFrame")
+SFST_DB = SFST_DB or {}
 
-SFST:SetPoint("CENTER", UIParent)
+SFST:SetPoint("CENTER", UIParent, "CENTER" )
 SFST:SetWidth(70)
 SFST:SetHeight(35)
 SFST:SetMovable(true)
 SFST:EnableMouse(true)
-SFST:SetUserPlaced(true)
-SFST:RegisterForDrag("LeftButton")
-SFST:SetScript("OnDragStart", function()
-    if IsShiftKeyDown() then
-        SFST:StartMoving()
-    end
-end
-)
-SFST:SetScript("OnDragStop", function()
-    SFST:StopMovingOrSizing()
-end
-)
+SFST:SetClampedToScreen(true)
 
 SFST.title = SFST:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 SFST.title:SetPoint("TOP", SFST, "TOP")
 SFST.title:SetText("Starfall Stun CD")
+
 SFST.timer = SFST:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
 SFST.timer:SetPoint("BOTTOM", SFST, "BOTTOM")
 SFST.timer:SetTextColor( 1, 1, 1, 1 )
 SFST:Hide()
 
+SFST:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
+SFST:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE")
+SFST:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE")
+
+SFST:RegisterForDrag("LeftButton")
+SFST:SetScript("OnDragStart", function()
+    if IsShiftKeyDown() then
+        this:StartMoving()
+    end
+end)
+
+SFST:SetScript("OnDragStop", function()
+    this:StopMovingOrSizing()
+    local x, y = this:GetCenter()
+    local ux, uy = UIParent:GetCenter()
+    SFST_DB.x, SFST_DB.y = floor(x - ux + 0.5), floor(y - uy + 0.5)
+end)
+
 StarfallHit = "Your (.*) hits (.*) for (%d+) Arcane damage."
 StarfallCrit = "Your (.*) crits (.*) for (%d+) Arcane damage."
-StarfallStunAffliction = "(.*) is afflicted by Starfall Stun."
-StarfallStunImmune = "Your Starfall Stun failed. (.*) is immune."
+SFSTunAffliction = "(.*) is afflicted by Starfall Stun."
+SFSTunImmune = "Your Starfall Stun failed. (.*) is immune."
 
 local function SFST_Delay()
     return GetTime()+0.5
@@ -43,29 +49,27 @@ local function SFST_CD()
     return 65 - ( cR * 5 )
 end
 
-function SFST_ShowTimer(duration, string)
-    local timer = CreateFrame('FRAME')
+function SFST_ShowTimer(duration, timerframe, parentframe)
+    local timer = CreateFrame("Frame")
     timer.start = GetTime()
     timer.duration = duration
     timer.sec = 0
-    timer:SetScript('OnUpdate', function()
+    timer:SetScript("OnUpdate", function()
         if GetTime() >= (this.start + this.sec) then
             this.sec = this.sec + 1
             if this.sec <= duration then
-                string:SetText(this.duration - this.sec)
+                timerframe:SetText(this.duration - this.sec)
                 return
             end
-            SFST:Hide()
-            string:Hide()
-            this:SetScript('OnUpdate', nil)
+            parentframe:Hide()
+            this:SetScript("OnUpdate", nil)
         end
     end)
-    string:SetText(duration)
-    SFST:Show()
-    string:Show()
+    timerframe:SetText(duration)
+    parentframe:Show()
 end
 
-local function StarfallStunTimer()   
+local function SFSTunTimer()
     if SFST_Interval and GetTime() > SFST_Interval then
         SFST_Spell, SFST_Creature, SFST_Interval = nil, nil, nil
     end
@@ -73,9 +77,9 @@ local function StarfallStunTimer()
         event = nil
     end
     if event == "CHAT_MSG_SPELL_SELF_DAMAGE" then
-        if strfind( arg1, StarfallStunImmune, 0) then
+        if strfind( arg1, SFSTunImmune, 0) then
             SFST_Cooldown = SFST_CD()
-            SFST_ShowTimer( SFST_Cooldown, SFST.timer )
+            SFST_ShowTimer( SFST_Cooldown, SFST.timer, SFST )
         elseif strfind( arg1, StarfallHit, 0) then
             _, _, SFST_Spell, SFST_Creature = strfind( arg1, StarfallHit, 0 )
         elseif strfind( arg1, StarfallCrit, 0) then
@@ -85,13 +89,13 @@ local function StarfallStunTimer()
             SFST_Interval = SFST_Delay()
         end
     elseif event == "CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE" or event == "CHAT_MSG_SPELL_PERIODIC_HOSTILEPLAYER_DAMAGE" and SFST_Interval and GetTime() < SFST_Interval then
-        if strfind( arg1, StarfallStunAffliction, 0) then
-            _, _, SFST_StunCreature = strfind( arg1, StarfallStunAffliction, 0)
+        if strfind( arg1, SFSTunAffliction, 0) then
+            _, _, SFST_StunCreature = strfind( arg1, SFSTunAffliction, 0)
             if strfind(SFST_Creature, SFST_StunCreature, 0) then
                 SFST_Cooldown = SFST_CD()
-                SFST_ShowTimer( SFST_Cooldown, SFST.timer )
+                SFST_ShowTimer( SFST_Cooldown, SFST.timer, SFST )
             end
         end
     end
 end
-SFST:SetScript("OnEvent",StarfallStunTimer)
+SFST:SetScript("OnEvent", SFSTunTimer )

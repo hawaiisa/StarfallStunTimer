@@ -1,5 +1,6 @@
+![StarfallStunTimer.png](StarfallStunTimer.png)
 # StarfallStunTimer
-A simple timer for tracking Vanilla+'s Starfall Stun cooldown as a Druid. The timer function itself is fetched from [Wayward's example addon](https://github.com/GoodOldWow/TestAddon1). Go give them a star for their great work!
+A simple timer for tracking [Vanilla+'s](https://www.vanillaplus.org/) Starfall Stun cooldown as a Druid. The timer function itself is fetched from [Wayward's example addon](https://github.com/GoodOldWow/TestAddon1). Go give them a star for their great work!
 
 ## Installation instructions
 1. Press the green "code" button -> Download ZIP
